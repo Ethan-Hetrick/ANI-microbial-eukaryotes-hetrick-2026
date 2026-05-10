@@ -13,7 +13,6 @@ This repository contains the processed data, metadata, code, and figure exports 
 - `data/`: processed pairwise comparison database and compact supporting data tables.
 - `assets/genome_taxonomy.csv`: genome-to-taxonomy metadata.
 - `assets/genera_classification_sources_environmental.csv`: genus annotations used for Figure 1.
-- `assets/figures/`: final SVG, PDF, and PNG figure exports.
 - `bin/`: helper scripts called by the notebook:
   - `figure2_panel_a_rank_probabilities.R`
   - `figure2_compose_alignment_panels.py`
