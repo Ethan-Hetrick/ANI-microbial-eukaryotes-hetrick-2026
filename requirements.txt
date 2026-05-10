@@ -1,0 +1,14 @@
+# Python package versions explicitly cited in the manuscript.
+matplotlib==3.10.8
+seaborn==0.13.2
+plotly==6.5.0
+scipy==1.17.0
+scikit-learn==1.8.0
+
+# Additional runtime dependencies used by the publication notebook.
+duckdb
+ipykernel
+nbformat
+numpy
+pandas
+pyarrow

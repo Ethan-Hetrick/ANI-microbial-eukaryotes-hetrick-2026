@@ -1,0 +1,16 @@
+# R package versions explicitly cited in the manuscript.
+ggplot2==4.0.2
+igraph==2.2.2
+nnet==7.3-20
+patchwork==1.3.2
+scales==1.4.0
+
+# Additional runtime dependencies used by the R figure helpers.
+DBI
+dplyr
+duckdb
+ggh4x
+ggridges
+svglite
+systemfonts
+tibble
