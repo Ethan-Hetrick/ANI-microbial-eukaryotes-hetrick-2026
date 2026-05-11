@@ -1,6 +1,6 @@
-# Genetic discontinuities among microbial eukaryotes suggest that the 95% ANI may be a universal reference threshold for microbial species demarcation
-
 [![DOI](https://zenodo.org/badge/1232240139.svg)](https://zenodo.org/badge/latestdoi/1232240139)
+
+# Genetic discontinuities among microbial eukaryotes suggest that the 95% ANI may be a universal reference threshold for microbial species demarcation
 
 Authors: Ethan E. Hetrick, Charlotte J. Royer, Matthew H. Seabolt, and Konstantinos T. Konstantinidis
 
