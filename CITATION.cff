@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "Genetic discontinuities among microbial eukaryotes suggest that the 95% ANI may be a universal reference threshold for microbial species demarcation"
+authors:
+  - family-names: "Hetrick"
+    given-names: "Ethan E."
+  - family-names: "Royer"
+    given-names: "Charlotte J."
+  - family-names: "Seabolt"
+    given-names: "Matthew H."
+  - family-names: "Konstantinidis"
+    given-names: "Konstantinos T."
+license: "MIT"
+repository-code: "https://github.com/Ethan-Hetrick/ANI-microbial-eukaryotes-hetrick-2026"
+date-released: "2026-05-11"
