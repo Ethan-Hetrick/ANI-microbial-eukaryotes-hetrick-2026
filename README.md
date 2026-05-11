@@ -5,6 +5,7 @@
 Authors: Ethan E. Hetrick, Charlotte J. Royer, Matthew H. Seabolt, and Konstantinos T. Konstantinidis
 
 Publication: TBD
+DOI: [10.5281/zenodo.20126269](https://doi.org/10.5281/zenodo.20126269)
 
 This repository contains the processed data, metadata, code, and figure exports needed to reproduce the manuscript analyses.
 
