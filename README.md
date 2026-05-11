@@ -5,7 +5,6 @@
 Ethan E. Hetrick, Charlotte J. Royer, Matthew H. Seabolt, and Konstantinos T. Konstantinidis
 
 Publication: TBD
-DOI: see badge above
 
 This repository contains the processed data, metadata, code, and figure exports needed to reproduce the manuscript analyses.
 
