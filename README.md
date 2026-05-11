@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/1232240139.svg)](https://zenodo.org/badge/latestdoi/1232240139)
 
-Ethan E. Hetrick, Charlotte J. Royer, Matthew H. Seabolt, and Konstantinos T. Konstantinidis
+Authors: Ethan E. Hetrick, Charlotte J. Royer, Matthew H. Seabolt, and Konstantinos T. Konstantinidis
 
 Publication: TBD
 
