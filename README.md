@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20126269.svg)](https://doi.org/10.5281/zenodo.20126269)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20126269-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.20126269)
 
 # Genetic discontinuities among microbial eukaryotes suggest that the 95% ANI may be a universal reference threshold for microbial species demarcation
 
