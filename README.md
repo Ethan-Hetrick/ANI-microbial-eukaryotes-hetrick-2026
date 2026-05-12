@@ -16,6 +16,7 @@ This repository contains the processed data, metadata, code, and figure exports 
 - `assets/genome_taxonomy.csv`: genome-to-taxonomy metadata.
 - `assets/genera_classification_sources_environmental.csv`: genus annotations used for Figure 1.
 - `bin/`: helper scripts called by the notebook:
+  - `CytoscapeGen.R`
   - `figure2_panel_a_rank_probabilities.R`
   - `figure2_compose_alignment_panels.py`
   - `figure3_ani_ridgeline_by_genus.R`
