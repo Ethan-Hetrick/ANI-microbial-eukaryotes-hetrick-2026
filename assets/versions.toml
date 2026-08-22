@@ -1,0 +1,23 @@
+[itsx]
+version = "1.1.3"
+path = "~/.local/share/proj/ANI-microbial-euk/bin/ITSx_1.1.3/ITSx"
+
+[hmmer]
+version = "3.1b2"
+module = "hmmer/3.1b2"
+
+[ncbi_blast]
+version = "2.17.0+"
+
+[blastdb]
+download_date = "2026-08-20"
+path = "~/.local/share/proj/ANI-microbial-euk/blastdb"
+databases = [
+  "18S_fungal_sequences",
+  "28S_fungal_sequences",
+  "ITS_RefSeq_Fungi",
+  "ITS_eukaryote_sequences",
+  "LSU_eukaryote_rRNA",
+  "SSU_eukaryote_rRNA",
+  "taxdb",
+]
