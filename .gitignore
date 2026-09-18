@@ -5,6 +5,7 @@ __pycache__/
 .RData
 .DS_Store
 Thumbs.db
+local_data/
 assets/figures/
 assets/figure2*.svg
 assets/*.docx
