@@ -1,0 +1,3 @@
+                               comparisons     mean   ci_low  ci_high
+different species within genus      954554 84.40405 84.39082 84.41690
+same species                       1676112 98.86690 98.86533 98.86851
