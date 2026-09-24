@@ -9,3 +9,7 @@ local_data/
 assets/figure2*.svg
 assets/*.docx
 ~$*.docx
+.tmp
+tmp*
+*test*
+figs/
