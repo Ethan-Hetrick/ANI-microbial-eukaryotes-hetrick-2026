@@ -1,3 +1,4 @@
+ncbi_genome_accession	tax_id	domain	phylum	class	order	family	genus	species
 GCA_000002415.2	5855	Eukaryota	Apicomplexa	Aconoidasida	Haemosporida	Plasmodiidae	Plasmodium	Plasmodium vivax
 GCA_000002435.2	5741	Eukaryota	Fornicata		Diplomonadida	Hexamitidae	Giardia	Giardia intestinalis
 GCA_000002445.1	185431	Eukaryota	Euglenozoa	Kinetoplastea	Trypanosomatida	Trypanosomatidae	Trypanosoma	Trypanosoma brucei
