@@ -1,0 +1,2 @@
+"total_comparisons","same_species_comparisons","different_species_comparisons","true_positive","false_negative","false_positive","true_negative","same_species_percent","different_species_percent","recall_percent","false_negative_percent","false_positive_rate_percent","precision_percent","specificity_percent"
+2776413,1676112,1100301,1664756,11356,90563,1009738,60.3696928374849,39.6303071625151,99.3224796433651,0.677520356634879,8.23074776811073,94.8406528955705,91.7692522318893
