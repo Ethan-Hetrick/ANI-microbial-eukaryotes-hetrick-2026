@@ -21,9 +21,7 @@ parse_args <- function(args) {
   opts <- list(
     repo_root = getwd(),
     output_prefix = NULL,
-    ani_matrix = NULL,
-    lca_matrix = NULL,
-    metadata = NULL
+    database = NULL
   )
 
   i <- 1
@@ -36,9 +34,7 @@ parse_args <- function(args) {
         "Defaults:\n",
         "  --repo-root      current working directory\n",
         "  --output-prefix  <repo-root>/assets/figures/figure3_ridgeline_ani\n",
-        "  --ani-matrix     averaged upper-triangle ANI Parquet matrix\n",
-        "  --lca-matrix     LCA Parquet matrix\n",
-        "  --metadata       <repo-root>/assets/genome_tax_metadata.parquet\n",
+        "  --database       <repo-root>/local_data/ani_microbial_eukaryotes.duckdb\n",
         sep = ""
       )
       quit(status = 0)
@@ -48,15 +44,9 @@ parse_args <- function(args) {
     } else if (arg == "--output-prefix") {
       i <- i + 1
       opts$output_prefix <- args[[i]]
-    } else if (arg == "--ani-matrix") {
+    } else if (arg == "--database") {
       i <- i + 1
-      opts$ani_matrix <- args[[i]]
-    } else if (arg == "--lca-matrix") {
-      i <- i + 1
-      opts$lca_matrix <- args[[i]]
-    } else if (arg == "--metadata") {
-      i <- i + 1
-      opts$metadata <- args[[i]]
+      opts$database <- args[[i]]
     } else {
       stop("Unknown argument: ", arg, call. = FALSE)
     }
@@ -87,20 +77,14 @@ suppressPackageStartupMessages({
 opts <- parse_args(commandArgs(trailingOnly = TRUE))
 repo_root <- normalizePath(opts$repo_root, mustWork = TRUE)
 
-required_inputs <- list(
-  ani_matrix = opts$ani_matrix,
-  lca_matrix = opts$lca_matrix,
-  metadata = if (is.null(opts$metadata)) {
-    file.path(repo_root, "assets", "genome_tax_metadata.parquet")
+database_path <- normalizePath(
+  if (is.null(opts$database)) {
+    file.path(repo_root, "local_data", "ani_microbial_eukaryotes.duckdb")
   } else {
-    opts$metadata
-  }
+    opts$database
+  },
+  mustWork = TRUE
 )
-if (any(vapply(required_inputs, is.null, logical(1)))) {
-  stop("--ani-matrix and --lca-matrix are required", call. = FALSE)
-}
-required_inputs <- vapply(required_inputs, normalizePath, character(1), mustWork = TRUE)
-sql_path <- function(path) gsub("'", "''", path, fixed = TRUE)
 
 if (is.null(opts$output_prefix)) {
   output_prefix <- file.path(repo_root, "assets", "figures", "figure3_ridgeline_ani")
@@ -123,62 +107,31 @@ dpi <- 300
 width_in <- 8
 height_in <- 14
 
-con <- dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+con <- dbConnect(duckdb::duckdb(), dbdir = database_path, read_only = TRUE)
 df <- dbGetQuery(
   con,
-  sprintf(
-    "
-    WITH ani_long AS (
-      SELECT
-        assembly_accession AS genome1,
-        compared_accession AS genome2,
-        ANI::DOUBLE AS ANI
-      FROM (
-        UNPIVOT read_parquet('%s')
-        ON COLUMNS(* EXCLUDE (assembly_accession))
-        INTO NAME compared_accession VALUE ANI
-      )
-    ),
-    lca_long AS (
-      SELECT
-        assembly_accession AS genome1,
-        compared_accession AS genome2,
-        lca_rank AS LSTR
-      FROM (
-        UNPIVOT read_parquet('%s')
-        ON COLUMNS(* EXCLUDE (assembly_accession))
-        INTO NAME compared_accession VALUE lca_rank
-      )
-    ),
-    retained AS (
-      SELECT
-        ncbi_genome_accession AS genome,
-        phylum_2026_09_01 AS phylum,
-        genus_2026_09_01 AS genus,
-        species_2026_09_01 AS species
-      FROM read_parquet('%s')
-      WHERE qc = 'pass'
-    )
-    SELECT
-      a.ANI,
-      l.LSTR,
+  "SELECT
+      p.ani AS ANI,
+      p.lca_2026_09_01 AS LSTR,
       m1.genus AS GEN1_GENUS,
       m1.species AS GEN1_SPECIES,
       m2.species AS GEN2_SPECIES,
       m1.phylum AS GEN1_PHYLUM
-    FROM ani_long a
-    JOIN lca_long l USING (genome1, genome2)
-    JOIN retained m1 ON a.genome1 = m1.genome
-    JOIN retained m2 ON a.genome2 = m2.genome
-    WHERE a.genome1 <> a.genome2
-      AND a.ANI IS NOT NULL
-      AND isfinite(a.ANI)
-      AND l.LSTR IN ('species', 'genus')
-    ",
-    sql_path(required_inputs[["ani_matrix"]]),
-    sql_path(required_inputs[["lca_matrix"]]),
-    sql_path(required_inputs[["metadata"]])
-  )
+    FROM pairwise_metrics p
+    JOIN (
+      SELECT genome_id,
+             phylum_2026_09_01 AS phylum,
+             genus_2026_09_01 AS genus,
+             species_2026_09_01 AS species
+      FROM genomes
+    ) m1 ON p.genome1_id = m1.genome_id
+    JOIN (
+      SELECT genome_id, species_2026_09_01 AS species
+      FROM genomes
+    ) m2 ON p.genome2_id = m2.genome_id
+    WHERE p.ani IS NOT NULL
+      AND isfinite(p.ani)
+      AND p.lca_2026_09_01 IN ('species', 'genus')"
 )
 dbDisconnect(con, shutdown = TRUE)
 

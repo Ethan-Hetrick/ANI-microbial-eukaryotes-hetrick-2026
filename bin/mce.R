@@ -8,66 +8,41 @@ suppressPackageStartupMessages({
 
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 root <- normalizePath(file.path(dirname(sub("^--file=", "", script_arg[[1]])), ".."))
-metadata_path <- file.path(root, "assets", "genome_tax_metadata.parquet")
-matrix_dir <- file.path(root, "data")
-if (!file.exists(file.path(matrix_dir, "fastani-upper-triangle.parquet"))) {
-  matrix_dir <- file.path(root, "..", "..", basename(root), "data")
-}
-ani_path <- file.path(matrix_dir, "fastani-upper-triangle.parquet")
-af_path <- file.path(matrix_dir, "fastani-AF-upper-triangle.parquet")
-qpath <- function(path) gsub("'", "''", normalizePath(path, mustWork = TRUE), fixed = TRUE)
+database_path <- normalizePath(file.path(root, "local_data", "ani_microbial_eukaryotes.duckdb"))
 
-con <- dbConnect(duckdb(), dbdir = ":memory:")
+con <- dbConnect(duckdb(), dbdir = database_path, read_only = TRUE)
 on.exit(dbDisconnect(con, shutdown = TRUE), add = TRUE)
 invisible(dbExecute(con, "SET threads=4"))
 invisible(dbExecute(con, "SET max_expression_depth=100000"))
 
-vertices <- dbGetQuery(con, sprintf(
+vertices <- dbGetQuery(con,
   "WITH base AS (
-     SELECT ncbi_genome_accession AS name, species_2026_09_01 AS species
-     FROM read_parquet('%s')
-     WHERE qc = 'pass'
-       AND species_2026_09_01 IS NOT NULL
+     SELECT genome_id, ncbi_genome_accession AS name, species_2026_09_01 AS species
+     FROM genomes
+     WHERE species_2026_09_01 IS NOT NULL
        AND trim(species_2026_09_01) <> ''
    ), eligible AS (
      SELECT species FROM base GROUP BY species HAVING count(*) >= 3
    )
-   SELECT b.name, b.species FROM base b JOIN eligible e USING (species) ORDER BY b.name",
-  qpath(metadata_path)
-))
+   SELECT b.genome_id, b.name, b.species
+   FROM base b JOIN eligible e USING (species)
+   ORDER BY b.name")
 
 if (nrow(vertices) == 0) stop("No eligible genomes", call. = FALSE)
 
 duckdb_register(con, "eligible_vertices", vertices)
-edges <- dbGetQuery(con, sprintf(
-  "WITH ani_long AS (
-     SELECT assembly_accession AS source, compared_accession AS target, value::DOUBLE AS ani
-     FROM (
-       UNPIVOT read_parquet('%s')
-       ON COLUMNS(* EXCLUDE (assembly_accession))
-       INTO NAME compared_accession VALUE value
-     )
-     WHERE assembly_accession <> compared_accession
-       AND value IS NOT NULL AND isfinite(value::DOUBLE) AND value::DOUBLE >= 95
-   ), af_long AS (
-     SELECT assembly_accession AS source, compared_accession AS target, value::DOUBLE AS af
-     FROM (
-       UNPIVOT read_parquet('%s')
-       ON COLUMNS(* EXCLUDE (assembly_accession))
-       INTO NAME compared_accession VALUE value
-     )
-     WHERE assembly_accession <> compared_accession
-       AND value IS NOT NULL AND isfinite(value::DOUBLE) AND value::DOUBLE >= 0.6
-   )
-   SELECT DISTINCT least(a.source, a.target) AS source,
-                   greatest(a.source, a.target) AS target
-   FROM ani_long a
-   JOIN af_long f USING (source, target)
-   JOIN eligible_vertices v1 ON a.source = v1.name
-   JOIN eligible_vertices v2 ON a.target = v2.name",
-  qpath(ani_path), qpath(af_path)
-))
+edges <- dbGetQuery(con,
+  "SELECT g1.ncbi_genome_accession AS source,
+          g2.ncbi_genome_accession AS target
+   FROM pairwise_metrics p
+   JOIN eligible_vertices v1 ON p.genome1_id = v1.genome_id
+   JOIN eligible_vertices v2 ON p.genome2_id = v2.genome_id
+   JOIN genomes g1 ON p.genome1_id = g1.genome_id
+   JOIN genomes g2 ON p.genome2_id = g2.genome_id
+   WHERE p.ani >= 95 AND p.af >= 0.6")
 duckdb_unregister(con, "eligible_vertices")
+
+vertices$genome_id <- NULL
 
 g <- graph_from_data_frame(edges, directed = FALSE, vertices = vertices)
 g <- simplify(g, remove.multiple = TRUE, remove.loops = TRUE)

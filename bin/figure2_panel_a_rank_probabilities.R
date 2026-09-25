@@ -84,7 +84,7 @@ find_repo_root <- function(starts) {
     }
 
     repeat {
-      has_data <- dir.exists(file.path(path, "data", "all_tables_processed"))
+      has_data <- file.exists(file.path(path, "local_data", "ani_microbial_eukaryotes.duckdb"))
       if (has_data) {
         return(path)
       }
@@ -170,24 +170,12 @@ output <- normalizePath(output, mustWork = FALSE)
 dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
 
 source(file.path(repo_root, "bin", "publication_figure_style.R"))
-metadata_path <- normalizePath(
-  file.path(repo_root, "assets", "genome_tax_metadata.parquet"),
+database_path <- normalizePath(
+  file.path(repo_root, "local_data", "ani_microbial_eukaryotes.duckdb"),
   mustWork = TRUE
 )
-all_tables_con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+all_tables_con <- DBI::dbConnect(duckdb::duckdb(), dbdir = database_path, read_only = TRUE)
 on.exit(DBI::dbDisconnect(all_tables_con, shutdown = TRUE), add = TRUE)
-
-all_tables_glob <- normalizePath(
-  file.path(repo_root, "data", "all_tables_processed", "*.parquet"),
-  mustWork = FALSE
-)
-DBI::dbExecute(
-  all_tables_con,
-  sprintf(
-    "CREATE VIEW all_tables AS SELECT * FROM read_parquet('%s')",
-    gsub("'", "''", all_tables_glob, fixed = TRUE)
-  )
-)
 
 rank_palette <- c(
   "species" = "#0072B2",
@@ -200,20 +188,11 @@ svg_fonts <- publication_svg_fonts()
 
 ani_rank <- DBI::dbGetQuery(
   all_tables_con,
-  sprintf(
-    "WITH retained AS (
-       SELECT ncbi_genome_accession AS genome
-       FROM read_parquet('%s')
-       WHERE qc = 'pass'
-     )
-     SELECT a.ANI, a.LSTR
-     FROM all_tables a
-     JOIN retained m1 ON a.Genome1 = m1.genome
-     JOIN retained m2 ON a.Genome2 = m2.genome
-     WHERE a.ANI IS NOT NULL
-       AND a.LSTR IS NOT NULL",
-    gsub("'", "''", metadata_path, fixed = TRUE)
-  )
+  "SELECT ani AS ANI, lca_2026_09_01 AS LSTR
+   FROM pairwise_metrics
+   WHERE ani IS NOT NULL
+     AND isfinite(ani)
+     AND lca_2026_09_01 IS NOT NULL"
 ) %>%
   mutate(
     ANI = as.numeric(ANI),

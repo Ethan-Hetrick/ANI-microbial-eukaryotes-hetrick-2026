@@ -8,30 +8,23 @@ suppressPackageStartupMessages({
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 root <- normalizePath(file.path(dirname(sub("^--file=", "", script_arg[[1]])), ".."))
 database_path <- normalizePath(file.path(root, "local_data", "ani_microbial_eukaryotes.duckdb"))
-metadata_path <- normalizePath(file.path(root, "assets", "genome_tax_metadata.parquet"))
-qpath <- function(path) gsub("'", "''", path, fixed = TRUE)
 
 con <- dbConnect(duckdb(), dbdir = database_path, read_only = TRUE)
 on.exit(dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
-counts <- dbGetQuery(con, sprintf(
-  "WITH retained AS (
-     SELECT ncbi_genome_accession AS accession,
-            species_2026_09_01 AS species
-     FROM read_parquet('%s')
-     WHERE qc = 'pass'
-       AND species_2026_09_01 IS NOT NULL
-       AND trim(species_2026_09_01) <> ''
-   ), pairs AS (
-     SELECT p.ani, m1.species = m2.species AS same_species
-     FROM analysis_pairwise_metrics p
+counts <- dbGetQuery(con,
+  "WITH pairs AS (
+     SELECT p.ani,
+            g1.species_2026_09_01 = g2.species_2026_09_01 AS same_species
+     FROM pairwise_metrics p
      JOIN genomes g1 ON p.genome1_id = g1.genome_id
      JOIN genomes g2 ON p.genome2_id = g2.genome_id
-     JOIN retained m1 ON g1.ncbi_genome_accession = m1.accession
-     JOIN retained m2 ON g2.ncbi_genome_accession = m2.accession
-     WHERE p.genome1_id <> p.genome2_id
-       AND p.ani IS NOT NULL
+     WHERE p.ani IS NOT NULL
        AND isfinite(p.ani)
+       AND g1.species_2026_09_01 IS NOT NULL
+       AND trim(g1.species_2026_09_01) <> ''
+       AND g2.species_2026_09_01 IS NOT NULL
+       AND trim(g2.species_2026_09_01) <> ''
    )
    SELECT
      count(*) AS total_comparisons,
@@ -41,9 +34,7 @@ counts <- dbGetQuery(con, sprintf(
      count(*) FILTER (WHERE same_species AND ani < 95) AS false_negative,
      count(*) FILTER (WHERE NOT same_species AND ani >= 95) AS false_positive,
      count(*) FILTER (WHERE NOT same_species AND ani < 95) AS true_negative
-   FROM pairs",
-  qpath(metadata_path)
-))
+   FROM pairs")
 
 for (name in names(counts)) counts[[name]] <- as.numeric(counts[[name]])
 counts$same_species_percent <- 100 * counts$same_species_comparisons / counts$total_comparisons
