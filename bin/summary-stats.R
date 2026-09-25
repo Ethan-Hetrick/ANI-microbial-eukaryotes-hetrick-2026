@@ -8,7 +8,7 @@ suppressPackageStartupMessages({
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 root <- normalizePath(file.path(dirname(sub("^--file=", "", script_arg[[1]])), ".."))
 database_path <- normalizePath(file.path(root, "local_data", "ani_microbial_eukaryotes.duckdb"))
-metadata_path <- normalizePath(file.path(root, "data", "genome_tax_metadata.parquet"))
+metadata_path <- normalizePath(file.path(root, "assets", "genome_tax_metadata.parquet"))
 qpath <- function(path) gsub("'", "''", path, fixed = TRUE)
 
 con <- dbConnect(duckdb(), dbdir = database_path, read_only = TRUE)

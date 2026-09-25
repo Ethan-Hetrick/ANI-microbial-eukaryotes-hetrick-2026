@@ -170,6 +170,10 @@ output <- normalizePath(output, mustWork = FALSE)
 dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
 
 source(file.path(repo_root, "bin", "publication_figure_style.R"))
+metadata_path <- normalizePath(
+  file.path(repo_root, "assets", "genome_tax_metadata.parquet"),
+  mustWork = TRUE
+)
 all_tables_con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
 on.exit(DBI::dbDisconnect(all_tables_con, shutdown = TRUE), add = TRUE)
 
@@ -196,12 +200,20 @@ svg_fonts <- publication_svg_fonts()
 
 ani_rank <- DBI::dbGetQuery(
   all_tables_con,
-  "
-  SELECT ANI, LSTR
-  FROM all_tables
-  WHERE ANI IS NOT NULL
-    AND LSTR IS NOT NULL
-  "
+  sprintf(
+    "WITH retained AS (
+       SELECT ncbi_genome_accession AS genome
+       FROM read_parquet('%s')
+       WHERE qc = 'pass'
+     )
+     SELECT a.ANI, a.LSTR
+     FROM all_tables a
+     JOIN retained m1 ON a.Genome1 = m1.genome
+     JOIN retained m2 ON a.Genome2 = m2.genome
+     WHERE a.ANI IS NOT NULL
+       AND a.LSTR IS NOT NULL",
+    gsub("'", "''", metadata_path, fixed = TRUE)
+  )
 ) %>%
   mutate(
     ANI = as.numeric(ANI),

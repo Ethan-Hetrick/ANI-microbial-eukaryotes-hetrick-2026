@@ -38,7 +38,7 @@ parse_args <- function(args) {
         "  --output-prefix  <repo-root>/assets/figures/figure3_ridgeline_ani\n",
         "  --ani-matrix     averaged upper-triangle ANI Parquet matrix\n",
         "  --lca-matrix     LCA Parquet matrix\n",
-        "  --metadata       genome taxonomy/QC Parquet table\n",
+        "  --metadata       <repo-root>/assets/genome_tax_metadata.parquet\n",
         sep = ""
       )
       quit(status = 0)
@@ -90,10 +90,14 @@ repo_root <- normalizePath(opts$repo_root, mustWork = TRUE)
 required_inputs <- list(
   ani_matrix = opts$ani_matrix,
   lca_matrix = opts$lca_matrix,
-  metadata = opts$metadata
+  metadata = if (is.null(opts$metadata)) {
+    file.path(repo_root, "assets", "genome_tax_metadata.parquet")
+  } else {
+    opts$metadata
+  }
 )
 if (any(vapply(required_inputs, is.null, logical(1)))) {
-  stop("--ani-matrix, --lca-matrix, and --metadata are required", call. = FALSE)
+  stop("--ani-matrix and --lca-matrix are required", call. = FALSE)
 }
 required_inputs <- vapply(required_inputs, normalizePath, character(1), mustWork = TRUE)
 sql_path <- function(path) gsub("'", "''", path, fixed = TRUE)

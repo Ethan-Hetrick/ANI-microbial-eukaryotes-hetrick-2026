@@ -8,7 +8,7 @@ suppressPackageStartupMessages({
 
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 root <- normalizePath(file.path(dirname(sub("^--file=", "", script_arg[[1]])), ".."))
-metadata_path <- file.path(root, "data", "genome_tax_metadata.parquet")
+metadata_path <- file.path(root, "assets", "genome_tax_metadata.parquet")
 matrix_dir <- file.path(root, "data")
 if (!file.exists(file.path(matrix_dir, "fastani-upper-triangle.parquet"))) {
   matrix_dir <- file.path(root, "..", "..", basename(root), "data")
