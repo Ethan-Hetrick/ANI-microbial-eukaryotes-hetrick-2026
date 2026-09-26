@@ -1,16 +1,16 @@
 "metric","value","denominator","percent"
 "eligible QC-pass genomes",6295,,
 "eligible resolved species with at least 3 representatives",321,,
-"qualifying ANI>=95 and AF>=0.6 edges",1729088,,
-"connected components",366,,
-"isolated genomes",79,6295,1.2549642573471
-"homogeneous connected components",317,366,86.6120218579235
-"heterogeneous connected components",49,366,13.3879781420765
-"species in one homogeneous component",175,321,54.5171339563863
-"species in multiple homogeneous components",29,321,9.03426791277259
-"species in at least one heterogeneous component",117,321,36.4485981308411
+"qualifying ANI>=95 and AF>=0.6 edges",1726415,,
+"connected components",378,,
+"isolated genomes",94,6295,1.49324861000794
+"homogeneous connected components",329,378,87.037037037037
+"heterogeneous connected components",49,378,12.962962962963
+"species in one homogeneous component",170,321,52.9595015576324
+"species in multiple homogeneous components",35,321,10.9034267912773
+"species in at least one heterogeneous component",116,321,36.1370716510903
 "heterogeneous components with exactly 1 outlier genome",14,49,28.5714285714286
 "heterogeneous components with <=5 outlier genomes",31,49,63.265306122449
-"maximal cliques with at least 2 genomes",395,,
-"homogeneous maximal cliques with at least 2 genomes",305,395,77.2151898734177
-"heterogeneous maximal cliques with at least 2 genomes",90,395,22.7848101265823
+"maximal cliques with at least 2 genomes",397,,
+"homogeneous maximal cliques with at least 2 genomes",307,397,77.3299748110831
+"heterogeneous maximal cliques with at least 2 genomes",90,397,22.6700251889169
