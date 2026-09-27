@@ -241,8 +241,8 @@ dependencies:
   - lz4-c=1.10.0
   - make=4.4.1
   - markupsafe=3.0.3
-  - matplotlib=3.10.8
-  - matplotlib-base=3.10.8
+  - matplotlib=3.10.6
+  - matplotlib-base=3.10.6
   - matplotlib-inline=0.2.2
   - mistune=3.3.4
   - munkres=1.1.4
