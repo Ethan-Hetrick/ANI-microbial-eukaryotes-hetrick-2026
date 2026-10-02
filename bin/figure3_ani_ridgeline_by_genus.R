@@ -104,7 +104,7 @@ shade_xmax <- 95
 base_size <- 11
 base_family <- "Helvetica"
 dpi <- 300
-width_in <- 8
+width_in <- 10.4
 height_in <- 14
 
 con <- dbConnect(duckdb::duckdb(), dbdir = database_path, read_only = TRUE)
