@@ -99,8 +99,8 @@ min_pairs_per_group <- 20
 x_min <- 75
 x_max <- 100
 x_ticks <- seq(75, 100, by = 5)
-shade_xmin <- 95
-shade_xmax <- 100
+shade_xmin <- 80
+shade_xmax <- 95
 base_size <- 11
 base_family <- "Helvetica"
 dpi <- 300

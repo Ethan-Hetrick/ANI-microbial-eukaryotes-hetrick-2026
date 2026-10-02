@@ -262,7 +262,7 @@ intersection_ani_right <- find_intersection(
 
 discontinuity_band <- tibble::tibble(
   xmin = 80,
-  xmax = 96,
+  xmax = 95,
   ymin = -Inf,
   ymax = Inf,
   band = "ANI discontinuity"
@@ -410,7 +410,7 @@ probability_curves <- ggplot(prediction_grid, aes(x = ANI)) +
     values = rank_palette,
     breaks = c("family_phylum", "genus", "species"),
     labels = c("family-phylum", "genus", "species"),
-    name = "Lowest Shared Taxonomic Rank"
+    name = "Lowest Common Ancestor"
   ) +
   scale_fill_manual(
     values = c("ANI discontinuity" = "grey85"),
