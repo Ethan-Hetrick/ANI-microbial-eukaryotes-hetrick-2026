@@ -25,9 +25,9 @@ configure_matplotlib(style="white")
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import duckdb
 import numpy as np
 import pandas as pd
-import pyarrow.dataset as ds
 import seaborn as sns
 from scipy.ndimage import gaussian_filter
 
@@ -59,7 +59,7 @@ ET.register_namespace("xlink", XLINK_NS)
 def find_repo_root(start: Path) -> Path:
     start = start.resolve()
     for path in [start, *start.parents]:
-        if (path / "data" / "all_tables_processed").exists():
+        if (path / "local_data" / "ani_microbial_eukaryotes.duckdb").is_file():
             return path
     raise FileNotFoundError("Could not find the publication repository root.")
 
@@ -102,16 +102,19 @@ def simplify_lstr(rank: object) -> str | None:
 
 
 def load_plot_data(repo_root: Path) -> pd.DataFrame:
-    dataset = ds.dataset(repo_root / "data" / "all_tables_processed", format="parquet")
-    table = dataset.to_table(
-        columns=["ANI", "AF", "LSTR"],
-        filter=ds.field("ANI").is_valid() & ds.field("AF").is_valid() & ds.field("LSTR").is_valid(),
-    )
-    plot_df = table.to_pandas()
-    plot_df["ANI"] = pd.to_numeric(plot_df["ANI"], errors="coerce")
-    plot_df["AF"] = pd.to_numeric(plot_df["AF"], errors="coerce")
-    plot_df = plot_df[plot_df["ANI"].between(72.5, 100)].copy()
-    plot_df["AF_pct"] = plot_df["AF"] * 100
+    database_path = repo_root / "local_data" / "ani_microbial_eukaryotes.duckdb"
+    with duckdb.connect(str(database_path), read_only=True) as con:
+        plot_df = con.execute(
+            """
+            SELECT ani AS ANI, af * 100 AS AF_pct, lca_2026_09_01 AS LSTR
+            FROM pairwise_metrics
+            WHERE ani BETWEEN 72.5 AND 100
+              AND af BETWEEN 0 AND 1
+              AND isfinite(ani)
+              AND isfinite(af)
+              AND lca_2026_09_01 IS NOT NULL
+            """
+        ).fetchdf()
     plot_df["rank_simple"] = plot_df["LSTR"].map(simplify_lstr)
     plot_df = plot_df.dropna(subset=["ANI", "AF_pct", "rank_simple"])
     return plot_df[["ANI", "AF_pct", "rank_simple"]]

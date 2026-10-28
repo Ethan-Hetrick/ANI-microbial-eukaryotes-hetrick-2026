@@ -20,7 +20,8 @@ prepend_default_user_library <- function() {
 parse_args <- function(args) {
   opts <- list(
     repo_root = getwd(),
-    output_prefix = NULL
+    output_prefix = NULL,
+    database = NULL
   )
 
   i <- 1
@@ -28,11 +29,12 @@ parse_args <- function(args) {
     arg <- args[[i]]
     if (arg %in% c("-h", "--help")) {
       cat(
-        "Usage: Rscript bin/figure3_ani_ridgeline_by_genus.R [--repo-root PATH] [--output-prefix PATH]\n",
+        "Usage: Rscript bin/figure3_ani_ridgeline_by_genus.R [OPTIONS]\n",
         "\n",
         "Defaults:\n",
         "  --repo-root      current working directory\n",
         "  --output-prefix  <repo-root>/assets/figures/figure3_ridgeline_ani\n",
+        "  --database       <repo-root>/local_data/ani_microbial_eukaryotes.duckdb\n",
         sep = ""
       )
       quit(status = 0)
@@ -42,6 +44,9 @@ parse_args <- function(args) {
     } else if (arg == "--output-prefix") {
       i <- i + 1
       opts$output_prefix <- args[[i]]
+    } else if (arg == "--database") {
+      i <- i + 1
+      opts$database <- args[[i]]
     } else {
       stop("Unknown argument: ", arg, call. = FALSE)
     }
@@ -71,7 +76,15 @@ suppressPackageStartupMessages({
 
 opts <- parse_args(commandArgs(trailingOnly = TRUE))
 repo_root <- normalizePath(opts$repo_root, mustWork = TRUE)
-parquet_glob <- file.path(repo_root, "data", "all_tables_processed", "*.parquet")
+
+database_path <- normalizePath(
+  if (is.null(opts$database)) {
+    file.path(repo_root, "local_data", "ani_microbial_eukaryotes.duckdb")
+  } else {
+    opts$database
+  },
+  mustWork = TRUE
+)
 
 if (is.null(opts$output_prefix)) {
   output_prefix <- file.path(repo_root, "assets", "figures", "figure3_ridgeline_ani")
@@ -86,26 +99,39 @@ min_pairs_per_group <- 20
 x_min <- 75
 x_max <- 100
 x_ticks <- seq(75, 100, by = 5)
-shade_xmin <- 95
-shade_xmax <- 100
+shade_xmin <- 80
+shade_xmax <- 95
 base_size <- 11
 base_family <- "Helvetica"
 dpi <- 300
-width_in <- 8
+width_in <- 10.4
 height_in <- 14
 
-con <- dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+con <- dbConnect(duckdb::duckdb(), dbdir = database_path, read_only = TRUE)
 df <- dbGetQuery(
   con,
-  sprintf(
-    "
-    SELECT ANI, LSTR, GEN1_GENUS, GEN1_SPECIES, GEN2_SPECIES, GEN1_PHYLUM
-    FROM read_parquet('%s')
-    WHERE ANI IS NOT NULL
-      AND LSTR IN ('species', 'genus')
-    ",
-    parquet_glob
-  )
+  "SELECT
+      p.ani AS ANI,
+      p.lca_2026_09_01 AS LSTR,
+      m1.genus AS GEN1_GENUS,
+      m1.species AS GEN1_SPECIES,
+      m2.species AS GEN2_SPECIES,
+      m1.phylum AS GEN1_PHYLUM
+    FROM pairwise_metrics p
+    JOIN (
+      SELECT genome_id,
+             phylum_2026_09_01 AS phylum,
+             genus_2026_09_01 AS genus,
+             species_2026_09_01 AS species
+      FROM genomes
+    ) m1 ON p.genome1_id = m1.genome_id
+    JOIN (
+      SELECT genome_id, species_2026_09_01 AS species
+      FROM genomes
+    ) m2 ON p.genome2_id = m2.genome_id
+    WHERE p.ani IS NOT NULL
+      AND isfinite(p.ani)
+      AND p.lca_2026_09_01 IN ('species', 'genus')"
 )
 dbDisconnect(con, shutdown = TRUE)
 

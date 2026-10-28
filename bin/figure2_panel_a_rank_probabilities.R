@@ -84,7 +84,7 @@ find_repo_root <- function(starts) {
     }
 
     repeat {
-      has_data <- dir.exists(file.path(path, "data", "all_tables_processed"))
+      has_data <- file.exists(file.path(path, "local_data", "ani_microbial_eukaryotes.duckdb"))
       if (has_data) {
         return(path)
       }
@@ -170,20 +170,12 @@ output <- normalizePath(output, mustWork = FALSE)
 dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
 
 source(file.path(repo_root, "bin", "publication_figure_style.R"))
-all_tables_con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+database_path <- normalizePath(
+  file.path(repo_root, "local_data", "ani_microbial_eukaryotes.duckdb"),
+  mustWork = TRUE
+)
+all_tables_con <- DBI::dbConnect(duckdb::duckdb(), dbdir = database_path, read_only = TRUE)
 on.exit(DBI::dbDisconnect(all_tables_con, shutdown = TRUE), add = TRUE)
-
-all_tables_glob <- normalizePath(
-  file.path(repo_root, "data", "all_tables_processed", "*.parquet"),
-  mustWork = FALSE
-)
-DBI::dbExecute(
-  all_tables_con,
-  sprintf(
-    "CREATE VIEW all_tables AS SELECT * FROM read_parquet('%s')",
-    gsub("'", "''", all_tables_glob, fixed = TRUE)
-  )
-)
 
 rank_palette <- c(
   "species" = "#0072B2",
@@ -196,12 +188,11 @@ svg_fonts <- publication_svg_fonts()
 
 ani_rank <- DBI::dbGetQuery(
   all_tables_con,
-  "
-  SELECT ANI, LSTR
-  FROM all_tables
-  WHERE ANI IS NOT NULL
-    AND LSTR IS NOT NULL
-  "
+  "SELECT ani AS ANI, lca_2026_09_01 AS LSTR
+   FROM pairwise_metrics
+   WHERE ani IS NOT NULL
+     AND isfinite(ani)
+     AND lca_2026_09_01 IS NOT NULL"
 ) %>%
   mutate(
     ANI = as.numeric(ANI),
@@ -271,7 +262,7 @@ intersection_ani_right <- find_intersection(
 
 discontinuity_band <- tibble::tibble(
   xmin = 80,
-  xmax = 96,
+  xmax = 95,
   ymin = -Inf,
   ymax = Inf,
   band = "ANI discontinuity"
@@ -419,7 +410,7 @@ probability_curves <- ggplot(prediction_grid, aes(x = ANI)) +
     values = rank_palette,
     breaks = c("family_phylum", "genus", "species"),
     labels = c("family-phylum", "genus", "species"),
-    name = "Lowest Shared Taxonomic Rank"
+    name = "Lowest Common Ancestor"
   ) +
   scale_fill_manual(
     values = c("ANI discontinuity" = "grey85"),

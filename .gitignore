@@ -5,7 +5,14 @@ __pycache__/
 .RData
 .DS_Store
 Thumbs.db
-assets/figures/
+local_data/
 assets/figure2*.svg
 assets/*.docx
 ~$*.docx
+.tmp
+tmp*
+*test*
+figs/
+*.pdf
+*barrnap*
+*vsearch*
