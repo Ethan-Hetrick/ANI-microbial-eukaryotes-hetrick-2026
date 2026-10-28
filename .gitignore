@@ -14,3 +14,5 @@ tmp*
 *test*
 figs/
 *.pdf
+*barrnap*
+*vsearch*
